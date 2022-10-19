@@ -1,0 +1,38 @@
+package pro.legion.launcher.utils;
+
+import pro.legion.utils.helper.JVMHelper;
+import pro.legion.utils.helper.LogHelper;
+
+import java.lang.reflect.Method;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+
+public final class NativeJVMHalt {
+    public final int haltCode;
+
+    public NativeJVMHalt(int haltCode) {
+        this.haltCode = haltCode;
+        System.out.println("JVM exit code " + haltCode);
+    }
+
+    public static void initFunc() {
+
+    }
+
+    public static void haltA(int code) {
+        Throwable[] th = new Throwable[3];
+        NativeJVMHalt halt = new NativeJVMHalt(code);
+        try {
+            LogHelper.dev("Try invoke Shutdown.exit");
+            Class<?> clazz = Class.forName("java.lang.Shutdown", true, ClassLoader.getSystemClassLoader());
+            Method exitMethod = clazz.getDeclaredMethod("exit", int.class);
+            exitMethod.setAccessible(true);
+            exitMethod.invoke(null, code);
+        } catch (Throwable e) {
+            th[1] = e;
+            if(LogHelper.isDevEnabled()) {
+                LogHelper.error(e);
+            }
+        }
+    }
+}
